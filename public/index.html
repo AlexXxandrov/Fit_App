@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FitApp · LEAO</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#1a1d24; --line:#2a2e38; --txt:#e8eaed; --mut:#9aa0aa;
+    --cardio:#ff5a5f; --fuerza:#4c8bf5; --flex:#34c759; --cal:#ff9f0a; --accent:#7c5cff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt);padding-bottom:80px}
+  header{padding:20px 16px 12px;border-bottom:1px solid var(--line)}
+  header h1{font-size:20px;font-weight:700}
+  header p{color:var(--mut);font-size:13px;margin-top:2px}
+  main{max-width:640px;margin:0 auto;padding:16px}
+  .tabs{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--line)}
+  .tabs button{flex:1;background:none;border:none;color:var(--mut);padding:12px 4px;font-size:11px;cursor:pointer}
+  .tabs button.active{color:var(--accent)}
+  .tabs button span{display:block;font-size:18px;margin-bottom:2px}
+  .view{display:none}.view.active{display:block}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .card h3{font-size:15px;margin-bottom:4px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .tag{font-size:11px;padding:3px 8px;border-radius:20px;font-weight:600;color:#fff}
+  .tag.cardio{background:var(--cardio)} .tag.fuerza{background:var(--fuerza)}
+  .tag.flexibilidad{background:var(--flex)} .tag.calistenia{background:var(--cal)}
+  .mut{color:var(--mut);font-size:13px}
+  input,select,textarea{width:100%;background:#12141a;border:1px solid var(--line);color:var(--txt);padding:10px;border-radius:10px;font-size:14px;margin-top:8px}
+  button.btn{background:var(--accent);color:#fff;border:none;padding:11px 16px;border-radius:10px;font-weight:600;cursor:pointer;margin-top:10px;width:100%}
+  button.small{width:auto;padding:6px 10px;font-size:12px;margin-top:0}
+  button.danger{background:#3a2226;color:#ff8a8a}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}
+  .cal .d{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;background:#12141a;font-size:12px;position:relative}
+  .cal .d.done{background:var(--flex);color:#000;font-weight:700}
+  .cal .head{color:var(--mut);font-size:10px;text-align:center;padding:4px 0}
+  h2.section{font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 8px}
+  .empty{color:var(--mut);text-align:center;padding:30px 10px;font-size:14px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🏋️ FitApp</h1>
+  <p>Rutinas · Horario · Calendario · Recordatorios</p>
+</header>
+
+<main>
+  <!-- HOY -->
+  <section id="view-hoy" class="view active">
+    <h2 class="section">Hoy</h2>
+    <div id="hoy-content"></div>
+  </section>
+
+  <!-- EJERCICIOS -->
+  <section id="view-ejercicios" class="view">
+    <h2 class="section">Nuevo ejercicio</h2>
+    <div class="card">
+      <input id="ex-name" placeholder="Nombre (ej. Sentadilla)">
+      <select id="ex-type">
+        <option value="cardio">Cardio (acelera ritmo)</option>
+        <option value="fuerza">Fuerza / peso</option>
+        <option value="flexibilidad">Flexibilidad / yoga</option>
+        <option value="calistenia">Calistenia</option>
+      </select>
+      <input id="ex-desc" placeholder="Descripción (opcional)">
+      <div class="grid2">
+        <input id="ex-sets" type="number" placeholder="Series">
+        <input id="ex-reps" type="number" placeholder="Reps">
+      </div>
+      <div class="grid2">
+        <input id="ex-dur" type="number" placeholder="Duración (seg)">
+        <input id="ex-mg" placeholder="Músculo">
+      </div>
+      <button class="btn" onclick="addExercise()">Agregar ejercicio</button>
+    </div>
+    <h2 class="section">Catálogo</h2>
+    <div id="ex-list"></div>
+  </section>
+
+  <!-- RUTINAS -->
+  <section id="view-rutinas" class="view">
+    <h2 class="section">Nueva rutina</h2>
+    <div class="card">
+      <input id="rt-name" placeholder="Nombre (ej. Full body lunes)">
+      <input id="rt-goal" placeholder="Objetivo (ej. quemar grasa)">
+      <button class="btn" onclick="addRoutine()">Crear rutina</button>
+    </div>
+    <h2 class="section">Mis rutinas</h2>
+    <div id="rt-list"></div>
+  </section>
+
+  <!-- HORARIO -->
+  <section id="view-horario" class="view">
+    <h2 class="section">Asignar rutina a un día</h2>
+    <div class="card">
+      <select id="sc-weekday">
+        <option value="1">Lunes</option><option value="2">Martes</option>
+        <option value="3">Miércoles</option><option value="4">Jueves</option>
+        <option value="5">Viernes</option><option value="6">Sábado</option>
+        <option value="0">Domingo</option>
+      </select>
+      <select id="sc-routine"></select>
+      <input id="sc-time" type="time" value="07:00">
+      <button class="btn" onclick="addSchedule()">Guardar en horario</button>
+    </div>
+    <h2 class="section">Horario semanal</h2>
+    <div id="sc-list"></div>
+
+    <h2 class="section">Recordatorios</h2>
+    <div class="card">
+      <select id="rm-routine"></select>
+      <select id="rm-weekday">
+        <option value="1">Lunes</option><option value="2">Martes</option>
+        <option value="3">Miércoles</option><option value="4">Jueves</option>
+        <option value="5">Viernes</option><option value="6">Sábado</option>
+        <option value="0">Domingo</option>
+      </select>
+      <input id="rm-time" type="time" value="06:45">
+      <input id="rm-msg" placeholder="Mensaje (ej. ¡A entrenar!)">
+      <button class="btn" onclick="addReminder()">Crear recordatorio</button>
+    </div>
+    <div id="rm-list"></div>
+  </section>
+
+  <!-- CALENDARIO -->
+  <section id="view-calendario" class="view">
+    <h2 class="section">Registrar entrenamiento de hoy</h2>
+    <div class="card">
+      <select id="lg-routine"></select>
+      <div class="grid2">
+        <input id="lg-dur" type="number" placeholder="Minutos">
+        <input id="lg-date" type="date">
+      </div>
+      <button class="btn" onclick="addLog()">Marcar como hecho ✓</button>
+    </div>
+    <h2 class="section" id="cal-title">Este mes</h2>
+    <div class="card"><div id="cal-grid" class="cal"></div></div>
+    <div id="lg-list"></div>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button class="active" data-v="hoy"><span>📅</span>Hoy</button>
+  <button data-v="ejercicios"><span>💪</span>Ejercicios</button>
+  <button data-v="rutinas"><span>📋</span>Rutinas</button>
+  <button data-v="horario"><span>⏰</span>Horario</button>
+  <button data-v="calendario"><span>🗓️</span>Calendario</button>
+</nav>
+
+<script src="app.js"></script>
+</body>
+</html>
