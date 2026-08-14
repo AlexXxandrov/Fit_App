@@ -1,6 +1,34 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
+const { bulkUpsert, TYPES } = require('../db/loader');
+
+// Sembrar catálogos que vienen como archivo en el repo (idempotente, upsert).
+// POST /api/exercises/seed  -> carga base + calistenia sin duplicar.
+router.post('/seed', async (req, res) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const dir = path.join(__dirname, '..', 'db');
+    const base = JSON.parse(fs.readFileSync(path.join(dir, 'exercises.seed.json'), 'utf8'));
+    const cali = JSON.parse(fs.readFileSync(path.join(dir, 'calisthenics.seed.json'), 'utf8'));
+    const result = await bulkUpsert([...base, ...cali]);
+    res.json(result);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Tipos válidos (para que el front los consulte)
+router.get('/types', (req, res) => res.json(TYPES));
+
+// Carga masiva: acepta JSON (array), texto CSV o pegado. Body:
+//   { "data": "<texto csv/json>" }  ó  { "data": [ {...}, {...} ] }
+router.post('/bulk', async (req, res) => {
+  try {
+    const input = req.body.data ?? req.body;
+    const result = await bulkUpsert(input);
+    res.json(result);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
 
 // Listar (opcional filtro por tipo: /api/exercises?type=cardio)
 router.get('/', async (req, res) => {

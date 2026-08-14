@@ -1,6 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
+const { generateRoutine, LEVELS } = require('../db/generator');
+
+// Generar rutina de calistenia automática.
+// POST /api/routines/generate  body: { level, patterns?, name? }
+router.post('/generate', async (req, res) => {
+  try {
+    const routine = await generateRoutine(req.body || {});
+    res.status(201).json(routine);
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+
+// Niveles disponibles (para el front)
+router.get('/levels', (req, res) => res.json(LEVELS));
 
 // Listar rutinas
 router.get('/', async (req, res) => {
@@ -16,7 +29,7 @@ router.get('/:id', async (req, res) => {
     const r = await pool.query('SELECT * FROM routines WHERE id=$1', [req.params.id]);
     if (!r.rows[0]) return res.status(404).json({ error: 'No encontrada' });
     const items = await pool.query(
-      `SELECT re.*, e.name, e.type, e.muscle_group
+      `SELECT re.*, e.name, e.type, e.muscle_group, e.avatar, e.difficulty
        FROM routine_exercises re
        JOIN exercises e ON e.id = re.exercise_id
        WHERE re.routine_id=$1 ORDER BY re.position`,
