@@ -38,6 +38,19 @@
   .cal .head{color:var(--mut);font-size:10px;text-align:center;padding:4px 0}
   h2.section{font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 8px}
   .empty{color:var(--mut);text-align:center;padding:30px 10px;font-size:14px}
+  .avatar{width:56px;height:56px;flex:0 0 56px;border-radius:12px;background:#12141a;display:flex;align-items:center;justify-content:center}
+  .avatar svg{width:44px;height:44px}
+  .avatar.cardio{color:var(--cardio)} .avatar.fuerza{color:var(--fuerza)}
+  .avatar.flexibilidad{color:var(--flex)} .avatar.calistenia{color:var(--cal)}
+  .exhead{display:flex;gap:12px;align-items:center}
+  .lvl{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700;border:1px solid var(--line)}
+  .lvl.principiante{color:#34c759;border-color:#34c759}
+  .lvl.intermedio{color:#ff9f0a;border-color:#ff9f0a}
+  .lvl.avanzado{color:#ff5a5f;border-color:#ff5a5f}
+  .instr{font-size:12px;color:var(--mut);margin-top:8px;line-height:1.4}
+  .filterbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .filterbar button{background:#12141a;border:1px solid var(--line);color:var(--mut);padding:6px 12px;border-radius:20px;font-size:12px;cursor:pointer}
+  .filterbar button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -45,6 +58,7 @@
   <h1>🏋️ FitApp</h1>
   <p>Rutinas · Horario · Calendario · Recordatorios</p>
 </header>
+<div id="notif-bar" style="display:none;background:#7c5cff;color:#fff;padding:12px 16px;text-align:center;font-size:14px;position:sticky;top:0;z-index:50"></div>
 
 <main>
   <!-- HOY -->
@@ -75,13 +89,50 @@
       </div>
       <button class="btn" onclick="addExercise()">Agregar ejercicio</button>
     </div>
+    <h2 class="section">Carga masiva</h2>
+    <div class="card">
+      <p class="mut">Pega varios ejercicios de un jalón. Un renglón por ejercicio.
+      Formato: <strong>nombre, tipo, series, reps, duración(seg), músculo</strong>.
+      También acepta JSON. Si el ejercicio ya existe, lo actualiza (no duplica).</p>
+      <textarea id="bulk-text" rows="6" placeholder="Zancadas, fuerza, 3, 12, , piernas
+Nadar, cardio, , , 1800, cuerpo completo
+Gato-vaca, flexibilidad, , , 60, espalda"></textarea>
+      <button class="btn" onclick="bulkLoad()">Cargar lote</button>
+      <div id="bulk-result" class="mut" style="margin-top:8px"></div>
+    </div>
+
     <h2 class="section">Catálogo</h2>
+    <div class="filterbar" id="ex-filter">
+      <button class="active" data-f="">Todos</button>
+      <button data-f="cardio">Cardio</button>
+      <button data-f="fuerza">Fuerza</button>
+      <button data-f="flexibilidad">Flexibilidad</button>
+      <button data-f="calistenia">Calistenia</button>
+    </div>
     <div id="ex-list"></div>
   </section>
 
   <!-- RUTINAS -->
   <section id="view-rutinas" class="view">
-    <h2 class="section">Nueva rutina</h2>
+    <h2 class="section">🤖 Generar rutina de calistenia</h2>
+    <div class="card">
+      <p class="mut">Arma una rutina balanceada según tu nivel. Elige qué grupos incluir (o déjalos todos).</p>
+      <select id="gen-level">
+        <option value="principiante">Principiante</option>
+        <option value="intermedio">Intermedio</option>
+        <option value="avanzado">Avanzado</option>
+      </select>
+      <div class="filterbar" id="gen-patterns" style="margin-top:10px">
+        <button class="active" data-p="empuje">Empuje</button>
+        <button class="active" data-p="traccion">Tracción</button>
+        <button class="active" data-p="piernas">Piernas</button>
+        <button class="active" data-p="fondos">Fondos</button>
+        <button class="active" data-p="core">Core</button>
+      </div>
+      <button class="btn" onclick="generateRoutine()">Generar rutina 💪</button>
+    </div>
+
+    <h2 class="section">Nueva rutina manual</h2>
     <div class="card">
       <input id="rt-name" placeholder="Nombre (ej. Full body lunes)">
       <input id="rt-goal" placeholder="Objetivo (ej. quemar grasa)">
@@ -109,9 +160,15 @@
     <div id="sc-list"></div>
 
     <h2 class="section">Recordatorios</h2>
+    <div class="card" id="notif-card">
+      <p class="mut">Activa las notificaciones para que la app te avise a la hora de entrenar, aunque estés en otra pestaña.</p>
+      <button class="btn" onclick="enableNotifs()" id="notif-btn">🔔 Activar notificaciones</button>
+      <div id="notif-status" class="mut" style="margin-top:6px"></div>
+    </div>
     <div class="card">
       <select id="rm-routine"></select>
       <select id="rm-weekday">
+        <option value="">Todos los días</option>
         <option value="1">Lunes</option><option value="2">Martes</option>
         <option value="3">Miércoles</option><option value="4">Jueves</option>
         <option value="5">Viernes</option><option value="6">Sábado</option>
@@ -149,6 +206,8 @@
   <button data-v="calendario"><span>🗓️</span>Calendario</button>
 </nav>
 
+<script src="avatars.js"></script>
+<script src="notifications.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
