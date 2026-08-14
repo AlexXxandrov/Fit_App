@@ -13,8 +13,20 @@ CREATE TABLE IF NOT EXISTS exercises (
   default_reps     INTEGER,      -- fuerza / calistenia
   default_duration INTEGER,      -- segundos (cardio / flexibilidad / yoga)
   muscle_group     TEXT,         -- opcional
+  avatar           TEXT,         -- clave del avatar SVG (ej. "pushup")
+  difficulty       TEXT,         -- principiante | intermedio | avanzado
+  instructions     TEXT,         -- cómo ejecutar el ejercicio
   created_at   TIMESTAMPTZ DEFAULT now()
 );
+
+-- Migración segura para bases ya existentes (agrega columnas si faltan).
+ALTER TABLE exercises ADD COLUMN IF NOT EXISTS avatar TEXT;
+ALTER TABLE exercises ADD COLUMN IF NOT EXISTS difficulty TEXT;
+ALTER TABLE exercises ADD COLUMN IF NOT EXISTS instructions TEXT;
+
+-- Evita duplicados y habilita "upsert" (insertar o actualizar) por nombre+tipo.
+CREATE UNIQUE INDEX IF NOT EXISTS uq_exercise_name_type
+  ON exercises (lower(name), type);
 
 -- Rutinas: un conjunto ordenado de ejercicios.
 CREATE TABLE IF NOT EXISTS routines (
